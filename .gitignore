@@ -35,5 +35,6 @@ Thumbs.db
 
 # Local runtime
 /tmp/
+/tmp_sipgo_probe/
 /data/
 *.log

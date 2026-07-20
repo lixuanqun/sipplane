@@ -120,7 +120,7 @@ Action types (planned):
 | `action.type` | Behavior |
 |---------------|----------|
 | `proxy` | Forward to single target / URI |
-| `loadBalance` | Weighted / round-robin across trunks |
+| `loadBalance` | Weighted / round-robin / **Call-ID consistent hash** across `trunks` (`algorithm`) |
 | `registerLookup` | Resolve Request-URI via location service |
 | `reject` | Respond with configured code/reason |
 | `webhook` | Ask external policy (v0.4+, timeout + fallback) |
@@ -128,6 +128,8 @@ Action types (planned):
 ### DispatchGroup (v0.3+)
 
 Named backend set with health probes (OpenSIPS/Kamailio dispatcher **and** APISIX Upstream analogue).
+
+**Schema (target YAML):** member field is `trunk` (not `ref`).
 
 ```yaml
 kind: DispatchGroup
@@ -152,11 +154,30 @@ spec:
       ejectSeconds: 30
 ```
 
+**Implementation note (current):**
+- LB algorithms run via Route `action.type: loadBalance` + `algorithm` (`internal/routing` → `internal/discovery`).
+- Active OPTIONS probes: Trunk `spec.options.sendOptionsPing` (dataplane builds ping groups).
+- YAML `kind: DispatchGroup` is the **target CRD**; control-plane loader does not ingest it yet.
+
 Discovery sources (see [gateway-patterns.md](gateway-patterns.md)): static API, DNS SRV, later Kubernetes EndpointSlice.
 
 ### ACL / RateLimit
 
-IP allow/deny, method filters, CPS / concurrent session caps — applied before routing.
+IP allow/deny, method filters, CPS / concurrent session caps — applied **before** routing.
+
+Configured on the **data-plane bootstrap** (`policies:`), not as a separate CRD yet. See [docs/policies.md](../policies.md).
+
+```yaml
+# bootstrap.yaml
+policies:
+  acl:
+    denyCidrs: ["10.255.255.0/24"]
+    allowCidrs: []          # empty = allow all non-denied
+    methods: []             # empty = all methods
+  rateLimit:
+    cps: 100
+    burst: 20
+```
 
 ## Lifecycle
 

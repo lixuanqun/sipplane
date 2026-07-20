@@ -1,0 +1,64 @@
+apiVersion: sipplane.io/v1alpha1
+kind: Tenant
+metadata:
+  name: acme
+spec:
+  displayName: "Acme LB lab"
+---
+# Two media trunks — enable OPTIONS probe for outlier eject.
+apiVersion: sipplane.io/v1alpha1
+kind: Trunk
+metadata:
+  name: fs-a
+  tenant: acme
+spec:
+  destination:
+    host: "127.0.0.1"
+    port: 5090
+    transport: udp
+  options:
+    sendOptionsPing: true
+---
+apiVersion: sipplane.io/v1alpha1
+kind: Trunk
+metadata:
+  name: fs-b
+  tenant: acme
+spec:
+  destination:
+    host: "127.0.0.1"
+    port: 5091
+    transport: udp
+  options:
+    sendOptionsPing: true
+---
+# Call-ID consistent hash across trunks (RFC 0001 inside one sipplane).
+apiVersion: sipplane.io/v1alpha1
+kind: Route
+metadata:
+  name: to-media-farm
+  tenant: acme
+spec:
+  priority: 100
+  match:
+    methods: ["INVITE", "ACK", "BYE", "CANCEL", "OPTIONS"]
+  action:
+    type: loadBalance
+    algorithm: consistent_hash
+    trunks:
+      - name: fs-a
+        weight: 100
+      - name: fs-b
+        weight: 100
+---
+apiVersion: sipplane.io/v1alpha1
+kind: Endpoint
+metadata:
+  name: alice
+  tenant: acme
+spec:
+  aors:
+    - "sip:alice@acme.example"
+  auth:
+    username: alice
+    password: alice-secret

@@ -1,8 +1,8 @@
 # RFC index — critical defaults
 
-> Status: **Accepted defaults for implementation** (may revise via Discussion before v1).
+> Status: **Accepted (P0 done).** Normative for `main` implementation. May revise via Discussion + RFC PR before v1.
 >
-> These RFCs close open questions from the architecture review so P1+ code does not guess.
+> These RFCs close open questions from the architecture review so code does not guess.
 
 | RFC | Title | Default decision |
 |-----|-------|------------------|

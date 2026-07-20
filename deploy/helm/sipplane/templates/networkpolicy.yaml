@@ -1,0 +1,68 @@
+{{- if .Values.networkPolicy.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "sipplane.fullname" . }}
+  labels:
+    {{- include "sipplane.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "sipplane.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    # Public SIP face (tighten with from CIDRs in overlay if LB is known)
+    - ports:
+        - protocol: UDP
+          port: {{ .Values.service.sipPort }}
+        - protocol: TCP
+          port: {{ .Values.service.sipPort }}
+    # Metrics / health from same namespace (kubelet probes + scrapers)
+    - from:
+        - podSelector: {}
+      ports:
+        - protocol: TCP
+          port: {{ .Values.service.httpPort }}
+    {{- with .Values.networkPolicy.extraIngress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  egress:
+    # DNS
+    - to:
+        - namespaceSelector: {}
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    {{- if .Values.networkPolicy.restrictEgress }}
+    # Redis location / shared rate-limit
+    - ports:
+        - protocol: TCP
+          port: 6379
+    # Control plane
+    - ports:
+        - protocol: TCP
+          port: 8090
+    # HEP (optional)
+    - ports:
+        - protocol: UDP
+          port: 9060
+    # SIP to trunks / UAs (UDP+TCP 5060/5061)
+    - ports:
+        - protocol: UDP
+          port: 5060
+        - protocol: TCP
+          port: 5060
+        - protocol: TCP
+          port: 5061
+    {{- with .Values.networkPolicy.extraEgress }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+    {{- else }}
+    # Lab / default: allow all egress (operators should set restrictEgress: true)
+    - {}
+    {{- end }}
+{{- end }}

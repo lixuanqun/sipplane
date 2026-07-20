@@ -177,7 +177,7 @@ spec:
   algorithm: consistent_hash   # round_robin | weighted | least_sessions
   hashKey: call-id             # SIP-critical (HTTP gateways rarely need this)
   members:
-    - ref: trunk-fs-a
+    - trunk: trunk-fs-a
       weight: 100
   healthCheck:
     active:

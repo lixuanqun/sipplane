@@ -1,0 +1,76 @@
+# Production-oriented overlay for deploy/helm/sipplane
+# See docs/deploy-production.md
+#
+# Usage:
+#   helm upgrade --install sipplane ./deploy/helm/sipplane \
+#     -f examples/deploy/production-values.yaml \
+#     --set advertisedHost=sip.example.com \
+#     --set controlToken="$(openssl rand -hex 32)" \
+#     --set controlPlane.databaseUrl='postgres://sipplane:...@postgres:5432/sipplane?sslmode=require'
+
+replicaCount: 2
+
+service:
+  type: LoadBalancer
+  sipPort: 5060
+  httpPort: 8080
+
+# advertisedHost: REQUIRED via --set (never a Pod IP)
+
+config:
+  transport: udp          # prefer tls + cert mounts in hardened overlays
+  realm: sipplane
+  enablePath: true
+  enableOutbound: true
+  redisAddr: "redis:6379"
+  controlUrl: "http://sipplane-control:8090"
+  redirectPolicy: passthrough
+  # hepAddr: "homer:9060"
+  # otelEndpoint: "http://otel-collector:4318"
+
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: "2"
+    memory: 1Gi
+
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+networkPolicy:
+  enabled: true
+  restrictEgress: true
+
+controlPlane:
+  enabled: true
+  listen: "0.0.0.0:8090"
+  # databaseUrl: set via --set (required for durable config)
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: "1"
+      memory: 512Mi
+
+# controlToken: set via --set / Secret (required when CP enabled)
+
+policies:
+  rateLimit:
+    cps: 200
+    burst: 40
+    backend: redis
+    key: ip

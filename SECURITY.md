@@ -2,14 +2,15 @@
 
 ## Supported versions
 
-sipplane has not yet released implementation packages. Security policy applies to:
+sipplane is under active development on `main` (pre-1.0). Security policy applies to:
 
-- Published documentation and design (supply-chain / phishing in Issues)
-- Future tagged releases once code ships
+- Code and configuration on `main`
+- Published documentation and design
+- Future tagged releases
 
 | Version | Supported |
 |---------|-----------|
-| main (docs) | Yes |
+| main | Yes (best effort) |
 | pre-1.0 tags | Best effort |
 | 1.x | Yes (when available) |
 
@@ -24,9 +25,9 @@ Prefer one of:
 
 Include:
 
-- Affected component / doc section
+- Affected component (binary, package, or doc section)
 - Reproduction steps or PoC (non-destructive)
-- Impact assessment (auth bypass, DoS, info leak, etc.)
+- Impact assessment (auth bypass, DoS, info leak, open relay, etc.)
 
 We aim to acknowledge within **72 hours** and to provide a remediation plan for confirmed issues.
 
@@ -39,4 +40,10 @@ SIP signaling systems are frequent targets for:
 - Amplification / CPS floods
 - Header injection / smuggling quirks
 
-Design reviews should assume a hostile network on the public SIP face. Default-deny routing and authenticated trunks are intentional product goals.
+Design and reviews assume a hostile network on the public SIP face. Default-deny routing, authenticated endpoints/trunks, and `advertised_host` requirements are intentional product goals ([RFC 0004](docs/design/rfc/0004-record-route.md)).
+
+## Threat model
+
+See the living draft: [docs/threat-model.md](docs/threat-model.md).
+
+Control-plane REST supports optional Bearer token auth (`SIPPLANE_CONTROL_TOKEN`); keep the control plane off the public Internet regardless.

@@ -1,0 +1,83 @@
+replicaCount: 2
+
+image:
+  repository: sipplane/sipplane
+  tag: "0.1.0"
+  pullPolicy: IfNotPresent
+
+service:
+  type: LoadBalancer
+  sipPort: 5060
+  httpPort: 8080
+
+advertisedHost: ""  # REQUIRED: SIP Service / LB hostname or IP (RFC 0004)
+advertisedPort: 5060
+
+config:
+  transport: udp
+  realm: sipplane
+  enablePath: true
+  enableOutbound: false
+  hepAddr: ""
+  hepCaptureId: 2001
+  redisAddr: ""
+  controlUrl: ""
+  otelEndpoint: ""
+  redirectPolicy: passthrough
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 1000m
+    memory: 512Mi
+
+# Aligns with Dockerfile USER 65532 (non-root)
+podSecurityContext:
+  runAsNonRoot: true
+  runAsUser: 65532
+  runAsGroup: 65532
+  fsGroup: 65532
+  seccompProfile:
+    type: RuntimeDefault
+
+containerSecurityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop: ["ALL"]
+
+networkPolicy:
+  enabled: false
+  # When true: egress limited to DNS + Redis/CP/HEP/SIP ports (see template)
+  restrictEgress: false
+  extraIngress: []
+  extraEgress: []
+
+controlPlane:
+  enabled: false
+  databaseUrl: ""
+  listen: "0.0.0.0:8090"
+  seed: ""
+  authToken: ""  # prefer top-level controlToken / Secret
+  resources:
+    requests:
+      cpu: 50m
+      memory: 64Mi
+    limits:
+      cpu: 500m
+      memory: 256Mi
+
+# Shared Bearer token for CP + DP watcher (set via --set or Secret overlay)
+controlToken: ""
+
+# Optional ingress policies written into bootstrap.yaml
+policies: {}
+# Example:
+# policies:
+#   rateLimit:
+#     cps: 200
+#     burst: 40
+#     backend: redis
+#     key: ip

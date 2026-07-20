@@ -1,17 +1,42 @@
-# sipplane
-
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/status-设计阶段-orange.svg)](ROADMAP.md)
-[![Go](https://img.shields.io/badge/go-1.22%2B-00ADD8.svg)](https://go.dev/)
+[![Status](https://img.shields.io/badge/status-P0%20done%20·%20P1%E2%80%93P4%20core-green.svg)](ROADMAP.md)
+[![Go](https://img.shields.io/badge/go-1.23%2B-00ADD8.svg)](https://go.dev/)
 [![SIP](https://img.shields.io/badge/SIP-RFC%203261-informational.svg)](https://datatracker.ietf.org/doc/html/rfc3261)
 
 **面向云原生的 Go 语言 SIP 信令面（Signaling Plane）。**
 
 sipplane 是开源的 **SIP 代理 / 注册服务器 / 边缘信令网关**，目标不是复刻 Kamailio / OpenSIPS 的本地 cfg，而是采用 **控制面 + 数据面** 架构：声明式策略、热更新、集群共享状态。
 
-> **当前阶段：架构与功能规划。** 业务代码尚未开始。规格开放评审 —— 见 [docs/](docs/) 与 [ROADMAP.md](ROADMAP.md)。欢迎参与设计讨论。
+> **当前进度：** **P0（文档/RFC）已完成。** P1 可通话 MVP～P3 集群/发现核心已实现并通过测试；部分 P4 边缘能力（TLS、NAT/Path、HEP、Webhook、Helm、OTel 等）已提前落地。规格见 [docs/](docs/) 与 [ROADMAP.md](ROADMAP.md)。
 
 English → [README.md](README.md)
+
+---
+
+## 快速开始
+
+```bash
+# 依赖：Go 1.23+（GOTOOLCHAIN=auto 可自动拉取工具链）
+go test ./...
+# 或完整自动化（含 Postgres/Redis/E2E）：
+#   .\scripts\test.ps1 all          # Windows
+#   ./scripts/test.sh all           # Linux/macOS
+go run ./cmd/sipplane -config examples/config/bootstrap.yaml -resources examples/config
+```
+
+- 健康检查：`http://127.0.0.1:8080/readyz`
+- 指标：`http://127.0.0.1:8080/metrics`
+- 测试说明：[docs/testing.md](docs/testing.md)
+- 控制面：[docs/control-plane.md](docs/control-plane.md)
+- 策略：[docs/policies.md](docs/policies.md)
+- 集群/发现：[docs/cluster.md](docs/cluster.md)
+- 边缘能力（P4）：[docs/edge.md](docs/edge.md)
+- 威胁模型：[docs/threat-model.md](docs/threat-model.md)
+- 互通矩阵：[docs/interop/matrix.md](docs/interop/matrix.md)
+- 生产参考部署：[docs/deploy-production.md](docs/deploy-production.md)
+- 互通说明：[docs/interop/README.md](docs/interop/README.md)
+- SIPp：[examples/sipp/README.md](examples/sipp/README.md)
+- 更多示例：[examples/README.md](examples/README.md)
 
 ---
 
@@ -31,68 +56,31 @@ English → [README.md](README.md)
 
 ---
 
-## 定位
+## 已实现能力（摘要）
 
-```text
-┌─────────────────────────────────────────────────────────────┐
-│                         控制面                                │
-│   Trunk · Route · Endpoint · Tenant · ACL · Revision        │
-│              REST / gRPC  ·  Watch  ·  审计                   │
-└────────────────────────────┬────────────────────────────────┘
-                             │ 推送 / 订阅
-┌────────────────────────────▼────────────────────────────────┐
-│                         数据面                                │
-│         Stateful Proxy · Registrar · Auth · LB              │
-│              （基于 sipgo，不重写协议栈）                        │
-└──────────────┬───────────────────────────┬──────────────────┘
-               │                           │
-        ┌──────▼──────┐             ┌──────▼──────┐
-        │   共享状态    │             │    事件      │
-        │ Redis / etcd │             │ NATS/Kafka  │
-        └─────────────┘             └─────────────┘
-```
-
-| 层级 | 项目 | 职责 |
+| 版本 | 状态 | 重点 |
 |------|------|------|
-| SIP 栈 | [sipgo](https://github.com/emiago/sipgo) | 解析、传输、事务 |
-| Dialog / 媒体（可选） | [diago](https://github.com/emiago/diago) | 后续 B2BUA / 本地 RTP |
-| **本项目** | **sipplane** | 平台：路由、注册、控制面、集群 |
+| **P0** | **已完成** | 愿景、架构、RFC 0001–0005、治理文档 |
+| **v0.1** | **已完成** | Proxy + Registrar + Digest + LocationStore + Prometheus + SIPp/互通说明 |
+| **v0.2a** | **已完成** | 控制面 REST（apply/dry-run/watch）+ Memory/Postgres + sipplanectl + DP Watcher |
+| **v0.2b** | **已完成** | ACL / RateLimit（bootstrap `policies:`）+ 策略说明 |
+| **v0.3** | **核心已完成** | Redis Location + loadBalance 算法 + OPTIONS + [集群文档](docs/cluster.md) |
+| **v0.4+** | **部分完成** | TLS、NAT/Path/Outbound、HEP、Webhook、302、OTel、Helm — 见 [edge.md](docs/edge.md) |
+
+关键默认 → [RFC 摘要](docs/design/rfc/README.zh-CN.md) · 延后/已提前项 → [BACKLOG](docs/design/BACKLOG.md)
 
 ---
 
-## 规划能力（摘要）
+## 二进制
 
-| 版本 | 重点 |
+| 命令 | 作用 |
 |------|------|
-| **v0.1** | 可联调 Proxy + Registrar + LocationStore 接口 + SIPp（含 CANCEL） |
-| **v0.2a** | PostgreSQL 控制面 + Watch/revision + dry-run |
-| **v0.2b** | ACL/限流 + sipplanectl |
-| **v0.3** | Redis Location + Call-ID 亲和 + DispatchGroup 探活 |
-| **v0.4+** | TLS/WSS、NAT、RTPEngine、HEP、Helm、插件 |
-
-关键默认 → [RFC 摘要](docs/design/rfc/README.zh-CN.md) · 延后项 → [BACKLOG](docs/design/BACKLOG.md)
-
-详情：[ROADMAP.md](ROADMAP.md) · [架构](docs/architecture.zh-CN.md) · [资源模型](docs/design/resource-model.zh-CN.md)
-
----
-
-## 文档
-
-| 文档 | 说明 |
-|------|------|
-| [架构设计](docs/architecture.zh-CN.md) | 控制面 / 数据面 / 状态面 |
-| [网关模式借鉴](docs/design/gateway-patterns.zh-CN.md) | 学 APISIX / Traefik / Tyk / Easegress … |
-| [关键 RFC](docs/design/rfc/README.zh-CN.md) | 亲和、revision、存储、RR、Location |
-| [资源模型](docs/design/resource-model.zh-CN.md) | Trunk、Route、Endpoint 等 |
-| [Backlog](docs/design/BACKLOG.md) | 延后功能（fork、NAT 等） |
-| [对比说明](docs/comparison.zh-CN.md) | 与 Kamailio、OpenSIPS、sipgo 等 |
-| [路线图](ROADMAP.md) | 分阶段里程碑（P2a/P2b） |
-| [贡献指南](CONTRIBUTING.md) | 当前欢迎设计类贡献 |
+| `cmd/sipplane` | 数据面 |
+| `cmd/sipplane-control` | 控制面 API |
+| `cmd/sipplanectl` | 配置 apply / dry-run 客户端 |
 
 ---
 
 ## 许可证
 
 [Apache License 2.0](LICENSE)
-
-欢迎 Star，帮助更多开发者在设计阶段发现本项目。
