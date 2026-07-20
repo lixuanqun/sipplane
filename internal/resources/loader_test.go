@@ -34,3 +34,33 @@ func TestLoadDirLab(t *testing.T) {
 		t.Fatalf("first route=%s", snap.Routes[0].Metadata.Name)
 	}
 }
+
+func TestLoadDirSkipsBootstrapFiles(t *testing.T) {
+	dir := filepath.Join("..", "..", "examples", "config")
+	if _, err := os.Stat(dir); err != nil {
+		t.Skip("examples/config missing")
+	}
+	snap, err := LoadDir(dir)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snap.Endpoints) < 2 || len(snap.Routes) < 1 {
+		t.Fatalf("snap endpoints=%d routes=%d", len(snap.Endpoints), len(snap.Routes))
+	}
+}
+
+func TestIsBootstrapFile(t *testing.T) {
+	cases := map[string]bool{
+		"bootstrap.yaml":      true,
+		"bootstrap.yml":       true,
+		"bootstrap-edge.yaml": true,
+		"Bootstrap-Lab.YAML":  true,
+		"lab.yaml":            false,
+		"my-bootstrap.yaml":   false,
+	}
+	for name, want := range cases {
+		if got := isBootstrapFile(name); got != want {
+			t.Fatalf("%s: got %v want %v", name, got, want)
+		}
+	}
+}

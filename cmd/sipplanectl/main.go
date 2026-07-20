@@ -95,7 +95,8 @@ func readYAML(path string) ([]byte, error) {
 		if ext != ".yaml" && ext != ".yml" {
 			continue
 		}
-		if strings.EqualFold(e.Name(), "bootstrap.yaml") {
+		if strings.HasPrefix(strings.ToLower(e.Name()), "bootstrap") &&
+			(strings.HasSuffix(strings.ToLower(e.Name()), ".yaml") || strings.HasSuffix(strings.ToLower(e.Name()), ".yml")) {
 			continue
 		}
 		data, err := os.ReadFile(filepath.Join(path, e.Name()))

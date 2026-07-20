@@ -30,7 +30,7 @@ func LoadDir(path string) (*Snapshot, error) {
 				continue
 			}
 			name := e.Name()
-			if strings.EqualFold(name, "bootstrap.yaml") || strings.EqualFold(name, "bootstrap.yml") {
+			if isBootstrapFile(name) {
 				continue
 			}
 			ext := strings.ToLower(filepath.Ext(name))
@@ -250,4 +250,11 @@ func (s *Snapshot) GetTrunk(tenant, name string) *Trunk {
 		return t
 	}
 	return s.Trunks[name]
+}
+
+// isBootstrapFile reports data-plane bootstrap YAML that must not be parsed as resources.
+func isBootstrapFile(name string) bool {
+	base := strings.ToLower(filepath.Base(name))
+	return base == "bootstrap.yaml" || base == "bootstrap.yml" ||
+		strings.HasPrefix(base, "bootstrap-") && (strings.HasSuffix(base, ".yaml") || strings.HasSuffix(base, ".yml"))
 }
