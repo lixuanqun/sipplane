@@ -1,0 +1,9 @@
+sipplane
+Copyright 2026 sipplane contributors
+
+This product includes software developed by the sipplane contributors.
+
+sipplane is designed to use the sipgo SIP stack
+(https://github.com/emiago/sipgo), which is licensed under the BSD 2-Clause License.
+Attribution and license terms for third-party dependencies will be maintained
+in this NOTICE file and in dependency LICENSE files as implementation lands.

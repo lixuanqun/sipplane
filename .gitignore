@@ -1,0 +1,39 @@
+# Binaries
+/bin/
+/dist/
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+/sipplane
+/sipplane-*
+
+# Test & coverage
+*.test
+*.out
+coverage.*
+*.coverprofile
+
+# Go workspace / vendor (optional local)
+/vendor/
+
+# IDE / OS
+.idea/
+.vscode/
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Local runtime
+/tmp/
+/data/
+*.log
