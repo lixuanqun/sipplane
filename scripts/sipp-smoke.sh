@@ -12,32 +12,59 @@ fi
 
 PORT="${SIPP_SMOKE_PORT:-15060}"
 HTTP_PORT="${SIPP_SMOKE_HTTP_PORT:-18080}"
+LOG="${TMPDIR:-/tmp}/sipplane-sipp-smoke.$$.log"
+BOOT="${TMPDIR:-/tmp}/sipplane-sipp-bootstrap.$$.yaml"
 mkdir -p bin
 go build -o bin/sipplane ./cmd/sipplane
 
-export SIPPLANE_HTTP_LISTEN="127.0.0.1:${HTTP_PORT}"
-export SIPPLANE_ADVERTISED_PORT="${PORT}"
+cat >"$BOOT" <<EOF
+listen: "127.0.0.1:${PORT}"
+transport: udp
+advertised_host: "127.0.0.1"
+advertised_port: ${PORT}
+http_listen: "127.0.0.1:${HTTP_PORT}"
+config_dir: "examples/config"
+realm: sipplane
+log_level: error
+EOF
 
 ./bin/sipplane \
-  -config examples/config/bootstrap.yaml \
+  -config "$BOOT" \
   -resources examples/config \
-  -listen "127.0.0.1:${PORT}" \
-  -advertised-host 127.0.0.1 \
-  >/tmp/sipplane-sipp-smoke.log 2>&1 &
+  >"$LOG" 2>&1 &
 PID=$!
-cleanup() { kill "$PID" 2>/dev/null || true; wait "$PID" 2>/dev/null || true; }
+cleanup() {
+  kill "$PID" 2>/dev/null || true
+  wait "$PID" 2>/dev/null || true
+  rm -f "$BOOT"
+}
 trap cleanup EXIT
 
-for i in $(seq 1 80); do
+ready=0
+for _ in $(seq 1 150); do
+  if ! kill -0 "$PID" 2>/dev/null; then
+    echo "sipplane exited early; log:"
+    cat "$LOG" || true
+    exit 1
+  fi
   if curl -sf "http://127.0.0.1:${HTTP_PORT}/readyz" >/dev/null 2>&1; then
+    ready=1
     break
   fi
   sleep 0.1
 done
-curl -sf "http://127.0.0.1:${HTTP_PORT}/readyz" >/dev/null
+if [[ "$ready" != "1" ]]; then
+  echo "timeout waiting for readyz on :${HTTP_PORT}; log:"
+  cat "$LOG" || true
+  exit 1
+fi
 
 echo "==> SIPp OPTIONS"
-sipp -sf examples/sipp/options_ping.xml "127.0.0.1:${PORT}" -m 1 -trace_err -nostdin
+sipp -sf examples/sipp/options_ping.xml "127.0.0.1:${PORT}" -m 1 -trace_err -nostdin || {
+  echo "OPTIONS failed; sipplane log:"; cat "$LOG" || true; exit 1
+}
 echo "==> SIPp REGISTER Digest"
-sipp -sf examples/sipp/register_alice.xml "127.0.0.1:${PORT}" -m 1 -trace_err -nostdin
+sipp -sf examples/sipp/register_alice.xml "127.0.0.1:${PORT}" -m 1 -trace_err -nostdin || {
+  echo "REGISTER failed; sipplane log:"; cat "$LOG" || true; exit 1
+}
 echo "==> SIPp smoke OK"
