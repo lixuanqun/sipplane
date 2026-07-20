@@ -1,0 +1,37 @@
+# Edge-oriented bootstrap example (P4)
+# Copy and adjust secrets / hostnames before use.
+listen: "0.0.0.0:5060"
+transport: udp
+advertised_host: "sip.example.com"
+advertised_port: 5060
+http_listen: "0.0.0.0:8080"
+config_dir: "examples/config"
+realm: sipplane
+log_level: info
+
+enable_path: true
+enable_outbound: true
+outbound_secret: "change-me"
+
+# hep_addr: "127.0.0.1:9060"
+# hep_capture_id: 2001
+# otel_endpoint: "http://127.0.0.1:4318"
+redirect_policy: passthrough
+
+# redis_addr: "127.0.0.1:6379"
+# control_url: "http://127.0.0.1:8090"
+# config_stale_after: "60s"
+
+# policies:
+#   acl:
+#     denyCidrs: []
+#   rateLimit:
+#     cps: 200
+#     burst: 40
+
+# TLS example:
+# listen: "0.0.0.0:5061"
+# transport: tls
+# advertised_port: 5061
+# tls_cert_file: "/etc/sipplane/tls/tls.crt"
+# tls_key_file: "/etc/sipplane/tls/tls.key"

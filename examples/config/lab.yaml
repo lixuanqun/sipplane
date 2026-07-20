@@ -1,0 +1,78 @@
+apiVersion: sipplane.io/v1alpha1
+kind: Tenant
+metadata:
+  name: acme
+spec:
+  displayName: "Acme Lab"
+  quotas:
+    maxEndpoints: 100
+    maxCPS: 50
+---
+apiVersion: sipplane.io/v1alpha1
+kind: Endpoint
+metadata:
+  name: alice
+  tenant: acme
+spec:
+  aors:
+    - "sip:alice@acme.example"
+  auth:
+    username: alice
+    password: alice-secret
+  allow:
+    register: true
+    invite: true
+---
+apiVersion: sipplane.io/v1alpha1
+kind: Endpoint
+metadata:
+  name: bob
+  tenant: acme
+spec:
+  aors:
+    - "sip:bob@acme.example"
+  auth:
+    username: bob
+    password: bob-secret
+  allow:
+    register: true
+    invite: true
+---
+apiVersion: sipplane.io/v1alpha1
+kind: Trunk
+metadata:
+  name: lab-pbx
+  tenant: acme
+spec:
+  destination:
+    host: "127.0.0.1"
+    port: 5090
+    transport: udp
+---
+apiVersion: sipplane.io/v1alpha1
+kind: Route
+metadata:
+  name: reject-blocked
+  tenant: acme
+spec:
+  priority: 200
+  match:
+    methods: ["INVITE"]
+    requestUri:
+      prefix: "sip:blocked@"
+  action:
+    type: reject
+    code: 403
+    reason: Forbidden
+---
+apiVersion: sipplane.io/v1alpha1
+kind: Route
+metadata:
+  name: ua-to-ua
+  tenant: acme
+spec:
+  priority: 100
+  match:
+    methods: ["INVITE", "BYE", "CANCEL", "ACK", "OPTIONS"]
+  action:
+    type: registerLookup

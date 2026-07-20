@@ -1,0 +1,31 @@
+# Optional Envoy-style sketch for Call-ID affinity (illustrative).
+# Real SIP UDP hashing usually needs a SIP-aware proxy; this shows the intent.
+#
+# Use with Redis location on all sipplane endpoints (docs/cluster.md).
+#
+# static_resources:
+#   listeners:
+#   - name: sip_tcp
+#     address: { socket_address: { address: 0.0.0.0, port_value: 5060 } }
+#     filter_chains:
+#     - filters:
+#       - name: envoy.filters.network.tcp_proxy
+#         typed_config:
+#           "@type": type.googleapis.com/envoy.extensions.filters.network.tcp_proxy.v3.TcpProxy
+#           cluster: sipplane
+#           hash_policy:
+#             source_ip: {}   # lab only — replace with Call-ID extraction
+#   clusters:
+#   - name: sipplane
+#     connect_timeout: 1s
+#     type: STATIC
+#     lb_policy: RING_HASH
+#     load_assignment:
+#       cluster_name: sipplane
+#       endpoints:
+#       - lb_endpoints:
+#         - endpoint: { address: { socket_address: { address: 10.0.1.11, port_value: 5060 } } }
+#         - endpoint: { address: { socket_address: { address: 10.0.1.12, port_value: 5060 } } }
+
+# Prefer: Route action loadBalance + algorithm: consistent_hash for trunk farms
+# when a single sipplane instance fronts multiple FreeSWITCH nodes.

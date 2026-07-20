@@ -22,4 +22,6 @@ REGISTER / INVITE / REFER / WebRTC …
 
 ## sipplane version / revision
 
-Design-phase: link related docs section if applicable.
+- sipplane git SHA / tag:
+- Config revision (if control plane):
+- Related docs (if design-only):

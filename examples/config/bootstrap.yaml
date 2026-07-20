@@ -1,0 +1,23 @@
+# Data-plane bootstrap (RFC 0004)
+listen: "0.0.0.0:5060"
+transport: udp
+advertised_host: "127.0.0.1"
+advertised_port: 5060
+http_listen: "0.0.0.0:8080"
+config_dir: "examples/config"
+realm: sipplane
+log_level: info
+
+# Optional P2b ingress policies (see docs/policies.md).
+# Uncomment to enable. Empty allowCidrs = allow all (after deny list).
+# policies:
+#   acl:
+#     denyCidrs: ["10.255.255.0/24"]
+#     # methods: ["REGISTER", "INVITE", "ACK", "BYE", "CANCEL", "OPTIONS"]
+#   rateLimit:
+#     cps: 100
+#     burst: 20
+
+# Optional: watch control plane (P2a)
+# control_url: "http://127.0.0.1:8090"
+# config_stale_after: "60s"

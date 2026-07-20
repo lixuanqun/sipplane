@@ -1,0 +1,91 @@
+name: test
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+      - name: Unit tests
+        run: |
+          export GOPROXY=https://proxy.golang.org,direct
+          export GOTOOLCHAIN=auto
+          go test ./... -count=1 -timeout 120s
+
+  integration:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: sipplane
+          POSTGRES_PASSWORD: sipplane
+          POSTGRES_DB: sipplane
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sipplane -d sipplane"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 3s
+          --health-timeout 3s
+          --health-retries 20
+    env:
+      SIPPLANE_DATABASE_URL: postgres://sipplane:sipplane@127.0.0.1:5432/sipplane?sslmode=disable
+      SIPPLANE_REDIS_ADDR: 127.0.0.1:6379
+      GOPROXY: https://proxy.golang.org,direct
+      GOTOOLCHAIN: auto
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+      - name: Integration tests
+        run: go test ./... -count=1 -timeout 180s
+      - name: Control plane e2e
+        run: bash scripts/test.sh e2e-control
+        env:
+          SKIP_DOCKER: "1"
+          CONTROL_PORT: "28091"
+
+  sipp:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+      - name: Install SIPp
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y sip-tester
+          sipp -v || true
+      - name: SIPp OPTIONS + REGISTER smoke
+        run: |
+          export GOPROXY=https://proxy.golang.org,direct
+          export GOTOOLCHAIN=auto
+          bash scripts/sipp-smoke.sh
+
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compose smoke
+        run: bash scripts/compose-smoke.sh
+      - name: Tear down
+        if: always()
+        run: docker compose -f examples/docker-compose/docker-compose.test.yml down -v || true

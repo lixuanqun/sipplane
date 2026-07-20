@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="ISO-8859-1" ?>
+<!DOCTYPE scenario SYSTEM "sipp.dtd">
+<!-- Local OPTIONS keepalive against sipplane (no auth). -->
+<scenario name="OPTIONS ping">
+  <send retrans="500">
+    <![CDATA[
+OPTIONS sip:sipplane.health SIP/2.0
+Via: SIP/2.0/[transport] [local_ip]:[local_port];branch=[branch]
+From: <sip:sipp@acme.example>;tag=[pid][call_number]
+To: <sip:sipplane.health>
+Call-ID: [call_id]
+CSeq: 1 OPTIONS
+Max-Forwards: 70
+Content-Length: 0
+
+    ]]>
+  </send>
+
+  <recv response="200" rtd="true"/>
+</scenario>

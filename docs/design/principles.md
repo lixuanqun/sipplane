@@ -51,7 +51,7 @@ When designing features, prefer patterns proven by APISIX, Traefik, Tyk, Easegre
 - Strict control / data plane split with last-known-good
 - Service discovery + active/passive health for backends
 
-See [gateway-patterns.md](gateway-patterns.md). SIP correctness still outranks HTTP analogies.
+See [gateway-patterns.md](gateway-patterns.md). Implementation tracker: [gateway-checklist.md](gateway-checklist.md). SIP correctness still outranks HTTP analogies.
 
 ## 12. Critical RFCs beat tribal knowledge
 

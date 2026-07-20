@@ -1,6 +1,6 @@
 # Architecture
 
-> Status: **Draft** — open for review. No production implementation yet.
+> Status: **Accepted (P0 done).** Implementation is active (`cmd/`, `internal/`) — P1–P3 core landed; selected P4 features ahead of schedule. RFCs 0001–0005 are normative defaults.
 >
 > 中文版：[architecture.zh-CN.md](architecture.zh-CN.md)
 
@@ -27,7 +27,7 @@ Non-goals for v1:
 flowchart TB
   subgraph CP[Control Plane]
     API[Management API<br/>REST / gRPC]
-    Store[(Config store<br/>PostgreSQL / etcd)]
+    Store[(Config store<br/>PostgreSQL default)]
     Watch[Config Watch / xDS-like push]
     Audit[Audit log]
   end
@@ -184,21 +184,23 @@ Minimum bar for v0.1+ (aligned with gateway access-log / metrics practice):
 - Ingress ACL + rate limits as first-class policies (not optional afterthoughts)
 - Threat model document planned before v1.0 (bring forward if public SIP face ships early)
 
-## 10. Repository layout (when code lands)
+## 10. Repository layout
 
 ```text
 sipplane/
   cmd/sipplane/           # data-plane binary
-  cmd/sipplane-control/   # control-plane binary (may merge early)
-  pkg/                    # public Go APIs for embedders
-  internal/               # proxy, registrar, routing, store
-  api/                    # protobuf / OpenAPI
-  deploy/helm/            # later
-  examples/               # SIPp, docker-compose
-  docs/                   # architecture (this tree)
+  cmd/sipplane-control/   # control-plane binary
+  cmd/sipplanectl/        # apply / dry-run CLI
+  internal/               # proxy, registrar, routing, store, discovery, …
+  deploy/helm/            # Helm chart
+  examples/               # config, docker-compose, SIPp notes
+  docs/                   # architecture, RFCs, testing
+  scripts/                # automated test runners
 ```
 
-Implementation must not start until P0 docs are accepted (see ROADMAP). Early PRs should target docs and examples scaffolding only.
+Public embed APIs may move to `pkg/` later; today keep product logic under `internal/`.
+
+RFCs 0001–0005 remain normative. Design PRs and code PRs are both welcome — see [CONTRIBUTING.md](../CONTRIBUTING.md) and [ROADMAP.md](../ROADMAP.md).
 
 ## 11. Open design questions
 
@@ -212,11 +214,11 @@ Implementation must not start until P0 docs are accepted (see ROADMAP). Early PR
 | Record-Route / advertised host | [0004](design/rfc/0004-record-route.md) |
 | Location cache / fail-closed | [0005](design/rfc/0005-location-cache.md) |
 
-Still open (non-blocking for P1):
+Still open (non-blocking):
 
-1. REST vs gRPC as primary Admin API (P2a picks one).
-2. Plugin ABI: gRPC-first vs Wasm-first (P4; prefer gRPC webhook first).
+1. Freeze remaining `v1alpha1` field names (community RFC).
+2. Plugin ABI: gRPC-first vs Wasm-first (P4; webhook HTTP already available).
 3. Multi-tenancy Redis hash tags under Redis Cluster.
-4. When to promote NAT/Path from [BACKLOG](design/BACKLOG.md) into P3.1.
+4. Full `kind: DispatchGroup` resource loader vs Trunk `sendOptionsPing` path (algorithms live in `internal/discovery`).
 
 Please open a Discussion before large design PRs that **supersede** an accepted RFC.

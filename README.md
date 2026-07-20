@@ -1,8 +1,8 @@
 # sipplane
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](LICENSE)
-[![Status](https://img.shields.io/badge/status-design%20phase-orange.svg)](ROADMAP.md)
-[![Go](https://img.shields.io/badge/go-1.22%2B-00ADD8.svg)](https://go.dev/)
+[![Status](https://img.shields.io/badge/status-P0%20done%20·%20P1%E2%80%93P4%20core-green.svg)](ROADMAP.md)
+[![Go](https://img.shields.io/badge/go-1.23%2B-00ADD8.svg)](https://go.dev/)
 [![SIP](https://img.shields.io/badge/SIP-RFC%203261-informational.svg)](https://datatracker.ietf.org/doc/html/rfc3261)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
 
@@ -10,9 +10,36 @@
 
 sipplane is an open-source **SIP proxy / registrar / edge signaling gateway** designed for Kubernetes-era telephony — not a rewrite of Kamailio or OpenSIPS config scripts, but a **control-plane + data-plane** architecture with hot-reloadable policies and cluster-shared state.
 
-> **Current phase: architecture & planning.** Implementation has not started yet. Specs are open for review — see [docs/](docs/) and [ROADMAP.md](ROADMAP.md). Contributions to design discussions are welcome.
+> **Current status:** **P0 (docs/RFCs) is done.** P1 callable MVP through P3 cluster/discovery core are implemented and tested; selected P4 edge features (TLS, NAT/Path, HEP, webhook, Helm, OTel, …) landed ahead of schedule. See [docs/](docs/) and [ROADMAP.md](ROADMAP.md).
 
 中文说明 → [README.zh-CN.md](README.zh-CN.md)
+
+---
+
+## Quick start
+
+```bash
+# Requires Go 1.23+ (GOTOOLCHAIN=auto pulls toolchain if needed)
+go test ./...
+# Full automation (Postgres/Redis/E2E):
+#   ./scripts/test.sh all          # Linux/macOS
+#   .\scripts\test.ps1 all         # Windows
+
+go run ./cmd/sipplane -config examples/config/bootstrap.yaml -resources examples/config
+```
+
+- Health: `http://127.0.0.1:8080/readyz`
+- Metrics: `http://127.0.0.1:8080/metrics`
+- Testing guide: [docs/testing.md](docs/testing.md)
+- Examples: [examples/README.md](examples/README.md)
+
+### Binaries
+
+| Command | Role |
+|---------|------|
+| `cmd/sipplane` | Data plane |
+| `cmd/sipplane-control` | Control-plane API |
+| `cmd/sipplanectl` | apply / dry-run client |
 
 ---
 
@@ -49,7 +76,7 @@ sipplane is an open-source **SIP proxy / registrar / edge signaling gateway** de
                │                           │
         ┌──────▼──────┐             ┌──────▼──────┐
         │ Shared State │             │   Events    │
-        │ Redis / etcd │             │ NATS/Kafka  │
+        │ Redis        │             │ NATS/Kafka  │
         └─────────────┘             └─────────────┘
 ```
 
@@ -63,28 +90,16 @@ sipplane is an open-source **SIP proxy / registrar / edge signaling gateway** de
 
 ---
 
-## Planned capabilities
+## Capabilities (by phase)
 
-### v0.1 — Callable MVP
-- UDP/TCP SIP listener
-- Stateful proxy (INVITE / ACK / BYE / CANCEL)
-- Registrar (in-memory location, pluggable store interface)
-- Digest authentication
-- Static declarative routes (YAML/JSON)
-- Metrics (Prometheus) + health endpoints
-- SIPp examples + FreeSWITCH / Asterisk interop notes
-
-### v0.2 — Control plane (split)
-- **P2a:** Management API + PostgreSQL + Watch/revision + dry-run
-- **P2b:** ACL / rate limit + `sipplanectl`
-
-### v0.3 — Cluster + discovery
-- Redis location + local cache (fail-closed)
-- Call-ID consistent hash affinity ([RFC 0001](docs/design/rfc/0001-affinity.md))
-- DispatchGroup: health checks, outlier eject
-
-### v0.4+ — Production edge
-- TLS / WSS, NAT / Path, RTPEngine, HEP, Helm, K8s discovery, plugins
+| Phase | Status | Highlights |
+|-------|--------|------------|
+| **P0** | **Done** | Vision, architecture, RFCs 0001–0005, governance |
+| **v0.1 (P1)** | **Done** | Proxy + Registrar + Digest + LocationStore + Prometheus + SIPp/interop notes |
+| **v0.2a (P2a)** | **Done** | Control REST (apply/dry-run/watch) + Memory/Postgres + sipplanectl + DP Watcher |
+| **v0.2b (P2b)** | **Done** | ACL / RateLimit via bootstrap `policies:` + cookbook |
+| **v0.3 (P3)** | **Done (core)** | Redis Location + loadBalance algorithms + OPTIONS + [cluster docs](docs/cluster.md) |
+| **v0.4+ (P4)** | **Partial** | TLS, NAT/Path/Outbound, HEP, Webhook, 302, OTel, Helm — see [edge.md](docs/edge.md) |
 
 **Critical defaults** → [docs/design/rfc/](docs/design/rfc/README.md) · **Deferred** → [BACKLOG](docs/design/BACKLOG.md)
 
@@ -98,12 +113,12 @@ Full detail: **[ROADMAP.md](ROADMAP.md)** · **[docs/architecture.md](docs/archi
 
 | Area | Status |
 |------|--------|
-| Vision & architecture | Draft — open for review |
-| Resource / API model | Draft |
-| Implementation (`cmd/`, `pkg/`) | **Not started** |
-| Releases | None yet |
-
-We publish design first on purpose: better APIs, clearer contribution surface, and a narrative developers can trust before code lands.
+| Vision & architecture | **Accepted** (P0 done) |
+| Critical RFCs 0001–0005 | **Accepted** — implemented defaults |
+| Resource / API model | `v1alpha1` (field freeze still open) |
+| Implementation (`cmd/`, `internal/`) | **Active** — P1–P3 core + selected P4 |
+| Automated tests | `go test ./...` + [docs/testing.md](docs/testing.md) |
+| Releases | pre-1.0 (no GA tag yet) |
 
 ---
 
@@ -112,13 +127,24 @@ We publish design first on purpose: better APIs, clearer contribution surface, a
 | Doc | Description |
 |-----|-------------|
 | [Architecture](docs/architecture.md) | Control / data / state planes |
+| [Testing](docs/testing.md) | Automated tests, scripts, Docker deps |
+| [Control plane](docs/control-plane.md) | REST API, sipplanectl, Watch / dry-run |
+| [Policies](docs/policies.md) | ACL / rate-limit cookbook |
+| [Cluster / discovery](docs/cluster.md) | Redis location, Call-ID affinity, loadBalance |
+| [Edge (P4)](docs/edge.md) | TLS, NAT/Path, HEP, Webhook, redirect, OTel, Helm |
+| [Threat model](docs/threat-model.md) | Pre-1.0 security draft |
+| [Interop matrix](docs/interop/matrix.md) | Pass/Fail tracker toward GA |
+| [Production deploy](docs/deploy-production.md) | Helm reference topology + NetworkPolicy |
+| [Interop](docs/interop/README.md) | FreeSWITCH / Asterisk / softphone notes |
+| [SIPp examples](examples/sipp/README.md) | OPTIONS + Digest REGISTER scenarios |
 | [Gateway patterns](docs/design/gateway-patterns.md) | Learn from APISIX / Traefik / Tyk / Easegress … |
+| [Gateway checklist](docs/design/gateway-checklist.md) | Pre-GA pattern tracker |
 | [Critical RFCs](docs/design/rfc/README.md) | Affinity, revision, store, Record-Route, location |
 | [Resource model](docs/design/resource-model.md) | Trunk, Route, Endpoint, … |
-| [Backlog](docs/design/BACKLOG.md) | Deferred features (fork, NAT, …) |
+| [Backlog](docs/design/BACKLOG.md) | Deferred / promoted features |
 | [Comparison](docs/comparison.md) | vs Kamailio, OpenSIPS, sipgo, LiveKit SIP |
-| [Roadmap](ROADMAP.md) | Phased milestones (P2a/P2b split) |
-| [Contributing](CONTRIBUTING.md) | How to help (design PRs welcome now) |
+| [Roadmap](ROADMAP.md) | Phased milestones |
+| [Contributing](CONTRIBUTING.md) | How to help |
 | [Security](SECURITY.md) | Vulnerability reporting |
 
 ---
@@ -140,8 +166,8 @@ We publish design first on purpose: better APIs, clearer contribution surface, a
 
 ## Community
 
-- **Issues** — design questions, RFCs, interop reports
-- **Discussions** — architecture debates (preferred before large PRs)
-- **PRs** — docs and design first; code once P1 milestones open
+- **Issues** — bugs, design questions, RFCs, interop reports ([good first issues](https://github.com/lixuanqun/sipplane/labels/good%20first%20issue) welcome)
+- **Discussions** — architecture debates (preferred before large design PRs)
+- **PRs** — docs **and** code; follow [CONTRIBUTING.md](CONTRIBUTING.md) and accepted RFCs
 
-Star the repo if cloud-native SIP in Go matters to you — it helps others find the project during the design phase.
+Star the repo if cloud-native SIP in Go matters to you.

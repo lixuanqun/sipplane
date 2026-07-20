@@ -1,0 +1,81 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "sipplane.fullname" . }}
+  labels:
+    {{- include "sipplane.labels" . | nindent 4 }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{- include "sipplane.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{- include "sipplane.selectorLabels" . | nindent 8 }}
+    spec:
+      {{- with .Values.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: sipplane
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          args:
+            - -config=/etc/sipplane/bootstrap.yaml
+            - -resources=/etc/sipplane
+          ports:
+            - name: sip-udp
+              containerPort: {{ .Values.service.sipPort }}
+              protocol: UDP
+            - name: sip-tcp
+              containerPort: {{ .Values.service.sipPort }}
+              protocol: TCP
+            - name: http
+              containerPort: {{ .Values.service.httpPort }}
+          env:
+            - name: SIPPLANE_ADVERTISED_HOST
+              value: {{ required "advertisedHost is required (RFC 0004)" .Values.advertisedHost | quote }}
+            - name: SIPPLANE_ADVERTISED_PORT
+              value: {{ .Values.advertisedPort | quote }}
+            {{- if .Values.config.redisAddr }}
+            - name: SIPPLANE_REDIS_ADDR
+              value: {{ .Values.config.redisAddr | quote }}
+            {{- end }}
+            {{- if .Values.config.controlUrl }}
+            - name: SIPPLANE_CONTROL_URL
+              value: {{ .Values.config.controlUrl | quote }}
+            {{- end }}
+            {{- if .Values.controlToken }}
+            - name: SIPPLANE_CONTROL_TOKEN
+              value: {{ .Values.controlToken | quote }}
+            {{- end }}
+            {{- if .Values.config.hepAddr }}
+            - name: SIPPLANE_HEP_ADDR
+              value: {{ .Values.config.hepAddr | quote }}
+            {{- end }}
+          volumeMounts:
+            - name: config
+              mountPath: /etc/sipplane
+              readOnly: true
+          {{- with .Values.containerSecurityContext }}
+          securityContext:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 5
+          readinessProbe:
+            httpGet:
+              path: /readyz
+              port: http
+            initialDelaySeconds: 3
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+      volumes:
+        - name: config
+          configMap:
+            name: {{ include "sipplane.fullname" . }}-config
