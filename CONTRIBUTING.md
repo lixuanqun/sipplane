@@ -15,8 +15,11 @@ Thanks for your interest. sipplane is in the **design phase**: documentation and
 - **Apache-2.0** contributions only (see [LICENSE](LICENSE))
 - Be respectful — [Code of Conduct](CODE_OF_CONDUCT.md)
 - Prefer **small, reviewable PRs**
+- Follow [docs/design/principles.md](docs/design/principles.md)
+- Do not contradict accepted [RFCs](docs/design/rfc/README.md) without a superseding RFC PR
 - Design changes that affect `v1alpha1` resources need a short RFC under `docs/design/`
 - Do **not** reimplement a SIP stack; we standardize on [sipgo](https://github.com/emiago/sipgo)
+- Prefer Discussions before contentious design changes
 
 ## Development (when code exists)
 

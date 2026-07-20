@@ -52,3 +52,8 @@ When designing features, prefer patterns proven by APISIX, Traefik, Tyk, Easegre
 - Service discovery + active/passive health for backends
 
 See [gateway-patterns.md](gateway-patterns.md). SIP correctness still outranks HTTP analogies.
+
+## 12. Critical RFCs beat tribal knowledge
+
+Affinity, config revision, store choice, Record-Route, and location caching defaults live in [rfc/](rfc/README.md).
+Code and new design docs MUST follow them or explicitly supersede via Discussion + RFC PR.

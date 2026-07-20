@@ -74,23 +74,21 @@ sipplane is an open-source **SIP proxy / registrar / edge signaling gateway** de
 - Metrics (Prometheus) + health endpoints
 - SIPp examples + FreeSWITCH / Asterisk interop notes
 
-### v0.2 — Control plane
-- Resource model: Trunk, Route, Endpoint, Tenant
-- Management API + config revision + validate / dry-run
-- Data-plane Watch / hot reload (no full process bounce)
-- Policy chain: ACL + rate limit (ingress)
+### v0.2 — Control plane (split)
+- **P2a:** Management API + PostgreSQL + Watch/revision + dry-run
+- **P2b:** ACL / rate limit + `sipplanectl`
 
 ### v0.3 — Cluster + discovery
-- Redis-backed location & affinity
-- Multi-instance HA
-- DispatchGroup: health checks, outlier eject, Call-ID consistent hash
+- Redis location + local cache (fail-closed)
+- Call-ID consistent hash affinity ([RFC 0001](docs/design/rfc/0001-affinity.md))
+- DispatchGroup: health checks, outlier eject
 
 ### v0.4+ — Production edge
-- TLS / WSS, NAT / Path / topology hiding
-- K8s / DNS service discovery, RTPEngine adapter
-- HEP → Homer, OTel, Wasm/gRPC plugins, Helm
+- TLS / WSS, NAT / Path, RTPEngine, HEP, Helm, K8s discovery, plugins
 
-**Gateway-grade patterns** (policy, observability, CP/DP, discovery) → **[docs/design/gateway-patterns.md](docs/design/gateway-patterns.md)**
+**Critical defaults** → [docs/design/rfc/](docs/design/rfc/README.md) · **Deferred** → [BACKLOG](docs/design/BACKLOG.md)
+
+**Gateway-grade patterns** → [docs/design/gateway-patterns.md](docs/design/gateway-patterns.md)
 
 Full detail: **[ROADMAP.md](ROADMAP.md)** · **[docs/architecture.md](docs/architecture.md)** · **[docs/design/resource-model.md](docs/design/resource-model.md)**
 
@@ -115,9 +113,11 @@ We publish design first on purpose: better APIs, clearer contribution surface, a
 |-----|-------------|
 | [Architecture](docs/architecture.md) | Control / data / state planes |
 | [Gateway patterns](docs/design/gateway-patterns.md) | Learn from APISIX / Traefik / Tyk / Easegress … |
+| [Critical RFCs](docs/design/rfc/README.md) | Affinity, revision, store, Record-Route, location |
 | [Resource model](docs/design/resource-model.md) | Trunk, Route, Endpoint, … |
+| [Backlog](docs/design/BACKLOG.md) | Deferred features (fork, NAT, …) |
 | [Comparison](docs/comparison.md) | vs Kamailio, OpenSIPS, sipgo, LiveKit SIP |
-| [Roadmap](ROADMAP.md) | Phased milestones |
+| [Roadmap](ROADMAP.md) | Phased milestones (P2a/P2b split) |
 | [Contributing](CONTRIBUTING.md) | How to help (design PRs welcome now) |
 | [Security](SECURITY.md) | Vulnerability reporting |
 

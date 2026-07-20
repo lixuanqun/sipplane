@@ -202,12 +202,21 @@ Implementation must not start until P0 docs are accepted (see ROADMAP). Early PR
 
 ## 11. Open design questions
 
-Tracked as GitHub Discussions / Issues:
+**Resolved defaults** (see [design/rfc/](design/rfc/README.md)):
 
-1. Config store: PostgreSQL vs etcd vs both (API vs Watch backend)?
-2. Affinity: Call-ID consistent hash vs fully shared dialog state?
-3. Plugin ABI: gRPC-first vs Wasm-first for routing hooks?
-4. Multi-tenancy keying in Redis: prefix vs Redis Cluster hash tags?
-5. Discovery default: DNS SRV vs K8s EndpointSlice for in-cluster media farms?
+| Topic | RFC |
+|-------|-----|
+| Affinity / dialog | [0001](design/rfc/0001-affinity.md) |
+| Config revision / stale ready | [0002](design/rfc/0002-config-revision.md) |
+| Config store | [0003](design/rfc/0003-config-store.md) |
+| Record-Route / advertised host | [0004](design/rfc/0004-record-route.md) |
+| Location cache / fail-closed | [0005](design/rfc/0005-location-cache.md) |
 
-Please open a Discussion before large design PRs.
+Still open (non-blocking for P1):
+
+1. REST vs gRPC as primary Admin API (P2a picks one).
+2. Plugin ABI: gRPC-first vs Wasm-first (P4; prefer gRPC webhook first).
+3. Multi-tenancy Redis hash tags under Redis Cluster.
+4. When to promote NAT/Path from [BACKLOG](design/BACKLOG.md) into P3.1.
+
+Please open a Discussion before large design PRs that **supersede** an accepted RFC.

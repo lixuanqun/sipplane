@@ -11,5 +11,7 @@
 | [design/resource-model.md](design/resource-model.md) | Declarative resources |
 | [design/resource-model.zh-CN.md](design/resource-model.zh-CN.md) | 资源模型（中文） |
 | [design/principles.md](design/principles.md) | Design principles |
+| [design/rfc/](design/rfc/README.md) | **Critical defaults (0001–0005)** |
+| [design/BACKLOG.md](design/BACKLOG.md) | Deferred features |
 
 Root docs: [README](../README.md) · [ROADMAP](../ROADMAP.md) · [CONTRIBUTING](../CONTRIBUTING.md)

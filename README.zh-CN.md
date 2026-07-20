@@ -64,12 +64,13 @@ English → [README.md](README.md)
 
 | 版本 | 重点 |
 |------|------|
-| **v0.1** | 可联调的 Stateful Proxy + Registrar + 静态路由 + 指标 |
-| **v0.2** | 声明式控制面 + Watch 热更新 + ACL/限流策略 + dry-run |
-| **v0.3** | Redis 集群状态 + DispatchGroup 探活/熔断 + Call-ID 哈希 |
-| **v0.4+** | TLS/WSS、K8s/DNS 发现、RTPEngine、HEP、Helm、插件 |
+| **v0.1** | 可联调 Proxy + Registrar + LocationStore 接口 + SIPp（含 CANCEL） |
+| **v0.2a** | PostgreSQL 控制面 + Watch/revision + dry-run |
+| **v0.2b** | ACL/限流 + sipplanectl |
+| **v0.3** | Redis Location + Call-ID 亲和 + DispatchGroup 探活 |
+| **v0.4+** | TLS/WSS、NAT、RTPEngine、HEP、Helm、插件 |
 
-网关级能力（策略、可观测、控制/数据分离、服务发现）→ [docs/design/gateway-patterns.zh-CN.md](docs/design/gateway-patterns.zh-CN.md)
+关键默认 → [RFC 摘要](docs/design/rfc/README.zh-CN.md) · 延后项 → [BACKLOG](docs/design/BACKLOG.md)
 
 详情：[ROADMAP.md](ROADMAP.md) · [架构](docs/architecture.zh-CN.md) · [资源模型](docs/design/resource-model.zh-CN.md)
 
@@ -81,9 +82,11 @@ English → [README.md](README.md)
 |------|------|
 | [架构设计](docs/architecture.zh-CN.md) | 控制面 / 数据面 / 状态面 |
 | [网关模式借鉴](docs/design/gateway-patterns.zh-CN.md) | 学 APISIX / Traefik / Tyk / Easegress … |
+| [关键 RFC](docs/design/rfc/README.zh-CN.md) | 亲和、revision、存储、RR、Location |
 | [资源模型](docs/design/resource-model.zh-CN.md) | Trunk、Route、Endpoint 等 |
+| [Backlog](docs/design/BACKLOG.md) | 延后功能（fork、NAT 等） |
 | [对比说明](docs/comparison.zh-CN.md) | 与 Kamailio、OpenSIPS、sipgo 等 |
-| [路线图](ROADMAP.md) | 分阶段里程碑 |
+| [路线图](ROADMAP.md) | 分阶段里程碑（P2a/P2b） |
 | [贡献指南](CONTRIBUTING.md) | 当前欢迎设计类贡献 |
 
 ---
