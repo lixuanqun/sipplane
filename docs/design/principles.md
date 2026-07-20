@@ -41,3 +41,14 @@ Interop with Kamailio/OpenSIPS **deployments** matters. Byte-compatible config d
 ## 10. Docs are part of the product
 
 Features without architecture notes and examples are incomplete. Design-phase PRs that only improve clarity are first-class.
+
+## 11. Learn from gateway products, not only SIP proxies
+
+When designing features, prefer patterns proven by APISIX, Traefik, Tyk, Easegress, KrakenD, Envoy, and Caddy:
+
+- Policy as a chain, not a monolith script
+- Observability as a product surface (metrics + access log + ready probes)
+- Strict control / data plane split with last-known-good
+- Service discovery + active/passive health for backends
+
+See [gateway-patterns.md](gateway-patterns.md). SIP correctness still outranks HTTP analogies.

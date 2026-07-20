@@ -52,7 +52,12 @@ sipplane targets a **general signaling plane** (registrar, multi-trunk routing, 
 [diagox](https://github.com/emiago/diagox) explores ingress/egress on diago/sipgo with a product shape.
 sipplane focuses on **open Apache-2.0**, explicit control-plane design, and community-driven roadmap from day one.
 
+## vs HTTP / API gateways (APISIX, Traefik, Tyk, …)
+
+sipplane **borrows** their ops model: policy chains, hot reload, CP/DP split, discovery, labeled metrics.
+It does **not** compete as an HTTP ingress. See [gateway-patterns.md](design/gateway-patterns.md).
+
 ## Summary one-liner
 
-> **sipgo** builds SIP messages. **sipplane** runs your SIP edge as a cloud service.
+> **sipgo** builds SIP messages. **sipplane** runs your SIP edge as a cloud service — with gateway-grade control plane UX.
 > **Kamailio/OpenSIPS** remain the gold standard for mature C proxies — sipplane is the Go-native alternative architecture, not a drop-in binary clone.

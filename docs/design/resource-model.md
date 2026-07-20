@@ -127,7 +127,32 @@ Action types (planned):
 
 ### DispatchGroup (v0.3+)
 
-Named backend set with health probes (OpenSIPS/Kamailio dispatcher analogue).
+Named backend set with health probes (OpenSIPS/Kamailio dispatcher **and** APISIX Upstream analogue).
+
+```yaml
+kind: DispatchGroup
+metadata:
+  name: media-farm
+  tenant: acme
+spec:
+  algorithm: consistent_hash   # round_robin | weighted | least_sessions
+  hashKey: call-id
+  members:
+    - trunk: fs-a
+      weight: 100
+    - trunk: fs-b
+      weight: 100
+  healthCheck:
+    active:
+      method: OPTIONS
+      interval: 30s
+      timeout: 5s
+    passive:
+      consecutiveFailures: 5
+      ejectSeconds: 30
+```
+
+Discovery sources (see [gateway-patterns.md](gateway-patterns.md)): static API, DNS SRV, later Kubernetes EndpointSlice.
 
 ### ACL / RateLimit
 

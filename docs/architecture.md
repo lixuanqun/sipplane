@@ -151,24 +151,40 @@ Single process: embedded control API + data plane + memory location.
 - Core pods: registrar + trunk routing
 - Same resource model; different role labels
 
-## 7. Observability
+## 7. Gateway-grade capabilities (borrowed patterns)
 
-Minimum bar for v0.1+:
+sipplane intentionally adopts product patterns from open-source HTTP/API gateways
+(APISIX, Kong, Traefik, Tyk, KrakenD, Easegress, Envoy/Istio, Caddy) and maps them
+to SIP. Full detail: **[design/gateway-patterns.md](design/gateway-patterns.md)**.
 
-- Prometheus: CPS, method rates, transaction timeouts, route hits, register counts
-- Structured logs: Call-ID, From/To tags, tenant, revision
-- Health / readiness probes
-- Later: HEP export to Homer, OpenTelemetry traces on control-plane RPCs
+| Capability | Target behavior |
+|------------|-----------------|
+| **Policy chain** | Ordered phases: ingress → auth → routing → egress → async |
+| **Observability** | Prometheus labels, structured access log, later HEP + OTel |
+| **CP / DP split** | Admin API + revision Watch; data plane lasts through CP outage |
+| **Service discovery** | Trunk / DispatchGroup; DNS SRV; later K8s Endpoints |
+| **Upstream health** | Active OPTIONS + passive outlier eject; fail closed to 503 |
+| **Hot reload** | Atomic config snapshot swap; validate / dry-run before commit |
 
-## 8. Security
+## 8. Observability
+
+Minimum bar for v0.1+ (aligned with gateway access-log / metrics practice):
+
+- Prometheus: CPS, method rates, transaction timeouts, route/trunk hits, register counts, `config_revision`
+- Structured access log: Call-ID, From/To tags, tenant, route, trunk, revision, response code, duration
+- Health `/healthz` and readiness `/readyz` (ready fails on stale config or critical upstreams all down)
+- Later: HEP export to Homer, OpenTelemetry (control plane first, sampled SIP spans)
+
+## 9. Security
 
 - Digest auth for REGISTER / INVITE (as configured)
 - mTLS between control and data planes (production)
 - TLS/WSS for SIP where required
 - No secrets in Git; credentials as references to secret stores
-- Threat model document planned before v1.0
+- Ingress ACL + rate limits as first-class policies (not optional afterthoughts)
+- Threat model document planned before v1.0 (bring forward if public SIP face ships early)
 
-## 9. Repository layout (when code lands)
+## 10. Repository layout (when code lands)
 
 ```text
 sipplane/
@@ -184,7 +200,7 @@ sipplane/
 
 Implementation must not start until P0 docs are accepted (see ROADMAP). Early PRs should target docs and examples scaffolding only.
 
-## 10. Open design questions
+## 11. Open design questions
 
 Tracked as GitHub Discussions / Issues:
 
@@ -192,5 +208,6 @@ Tracked as GitHub Discussions / Issues:
 2. Affinity: Call-ID consistent hash vs fully shared dialog state?
 3. Plugin ABI: gRPC-first vs Wasm-first for routing hooks?
 4. Multi-tenancy keying in Redis: prefix vs Redis Cluster hash tags?
+5. Discovery default: DNS SRV vs K8s EndpointSlice for in-cluster media farms?
 
 Please open a Discussion before large design PRs.

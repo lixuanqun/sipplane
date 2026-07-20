@@ -99,15 +99,29 @@ flowchart TB
 - **B. 控制 / 数据分离**：生产推荐
 - **C. 边缘 + 核心**：边缘做 TLS/ACL/拓扑隐藏，核心做注册与中继
 
-## 7. 可观测性
+## 7. 网关级能力（借鉴模式）
 
-v0.1+ 底线：Prometheus、结构化日志（含 Call-ID / revision）、健康检查；后续 HEP → Homer、控制面 OTel。
+sipplane 主动吸收开源 HTTP/API 网关（APISIX、Kong、Traefik、Tyk、KrakenD、Easegress、Envoy/Istio、Caddy）的产品模式，并映射到 SIP。详见 **[design/gateway-patterns.zh-CN.md](design/gateway-patterns.zh-CN.md)**。
 
-## 8. 开放问题
+| 能力 | 目标行为 |
+|------|----------|
+| **策略链** | ingress → auth → routing → egress → async |
+| **可观测** | Prometheus 标签、结构化 access log，后续 HEP + OTel |
+| **控制/数据分离** | Admin API + revision Watch；控制面宕机数据面继续 |
+| **服务发现** | Trunk / DispatchGroup；DNS SRV；后续 K8s Endpoints |
+| **上游健康** | 主动 OPTIONS + 被动熔断；全挂返回 503 |
+| **热更新** | 原子快照；先 validate / dry-run 再提交 |
+
+## 8. 可观测性
+
+v0.1+ 底线：Prometheus（含 `config_revision`）、结构化 access log（含 Call-ID / route / trunk / revision）、`/healthz` 与 `/readyz`；后续 HEP → Homer、控制面 OTel。
+
+## 9. 开放问题
 
 1. 配置存储：PostgreSQL vs etcd vs 两者分工？
 2. 亲和：Call-ID 一致性哈希 vs 完全共享 dialog？
 3. 插件：gRPC-first vs Wasm-first？
 4. 多租户 Redis key 设计？
+5. 发现默认：DNS SRV vs K8s EndpointSlice？
 
 大改设计前请先开 GitHub Discussion。
